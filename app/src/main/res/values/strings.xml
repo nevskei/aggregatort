@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Aggregator</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="save_button">Сохранить</string>
+    <string name="name">Название</string>
+    <string name="code">Номер</string>
+    <string name="description">Описание</string>
+    <string name="fromt">Лицевая сторона</string>
+    <string name="barcode">Штрих код</string>
+</resources>

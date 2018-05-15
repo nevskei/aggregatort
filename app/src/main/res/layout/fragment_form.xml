@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context=".FormFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:ems="10"
+                android:hint="@string/name"
+                android:inputType="textPersonName" />
+
+            <EditText
+                android:id="@+id/code"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:ems="10"
+                android:hint="@string/code"
+                android:inputType="textPersonName" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/fromt" />
+
+            <ImageView
+                android:id="@+id/logoCard"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:contentDescription="@string/fromt"
+                android:cropToPadding="false" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/barcode" />
+
+            <ImageView
+                android:id="@+id/barcode"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:contentDescription="@string/barcode"/>
+
+            <EditText
+                android:id="@+id/description"
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:ems="10"
+                android:hint="@string/description"
+                android:inputType="textMultiLine" />
+
+            <Button
+                android:id="@+id/save_card"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="@string/save_button" />
+        </LinearLayout>
+    </ScrollView>
