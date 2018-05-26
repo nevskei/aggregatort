@@ -6,14 +6,16 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
-import android.os.Environment;
+import android.graphics.Bitmap;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 
+import org.michaelevans.colorart.library.ColorArt;
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,13 +29,15 @@ public class Card {
     private static SQLiteDatabase db;
     private static File storageDir;
     private static MainActivity mainContext;
-    private static final int REQUEST_TAKE_PHOTO = 1;
+    public static final int REQUEST_TAKE_LOGO = 1;
+    public static final int REQUEST_TAKE_BARCODE = 2;
 
 
     private long id;
     public String name;
     public String description;
     public String code;
+    public String color;
     public String logo;
     public String barcode;
 
@@ -48,7 +52,7 @@ public class Card {
         db = cardDbHelper.getWritableDatabase();
     }
 
-    public Card(Context context, long id, String name, String description, String code, String logo, String barcode) {
+    public Card(Context context, long id, String name, String description, String code, String color, String logo, String barcode) {
         if (db == null) {
             Card.init(context);
         }
@@ -56,12 +60,13 @@ public class Card {
         this.name = name;
         this.description = description;
         this.code = code;
+        this.color = color;
         this.logo = logo;
         this.barcode = barcode;
     }
 
 
-    public Card(Context context, String name, String description, String code, String logo, String barcode) {
+    public Card(Context context, String name, String description, String code, String color, String logo, String barcode) {
         if (db == null) {
             Card.init(context);
         }
@@ -69,6 +74,7 @@ public class Card {
         this.name = name;
         this.description = description;
         this.code = code;
+        this.color = color;
         this.logo = logo;
         this.barcode = barcode;
     }
@@ -84,6 +90,7 @@ public class Card {
                     CardEntry.COLUMN_NAME,
                     CardEntry.COLUMN_DESCRIPTON,
                     CardEntry.COLUMN_CODE,
+                    CardEntry.COLUMN_COLOR,
                     CardEntry.COLUMN_LOGO,
                     CardEntry.COLUMN_BARCCODE,
             };
@@ -104,6 +111,7 @@ public class Card {
             int nameColumnIndex = cursor.getColumnIndex(CardEntry.COLUMN_NAME);
             int descriptionColumnIndex = cursor.getColumnIndex(CardEntry.COLUMN_DESCRIPTON);
             int codeColumnIndex = cursor.getColumnIndex(CardEntry.COLUMN_CODE);
+            int colorColumnIndex = cursor.getColumnIndex(CardEntry.COLUMN_COLOR);
             int logoColumnIndex = cursor.getColumnIndex(CardEntry.COLUMN_LOGO);
             int barccodeColumnIndex = cursor.getColumnIndex(CardEntry.COLUMN_BARCCODE);
 
@@ -114,6 +122,7 @@ public class Card {
                     cursor.getString(nameColumnIndex),
                     cursor.getString(descriptionColumnIndex),
                     cursor.getString(codeColumnIndex),
+                    cursor.getString(colorColumnIndex),
                     cursor.getString(logoColumnIndex),
                     cursor.getString(barccodeColumnIndex)
                 ));
@@ -140,6 +149,7 @@ public class Card {
         values.put(CardEntry.COLUMN_NAME, name);
         values.put(CardEntry.COLUMN_DESCRIPTON, description);
         values.put(CardEntry.COLUMN_CODE, code);
+        values.put(CardEntry.COLUMN_COLOR, color);
         values.put(CardEntry.COLUMN_LOGO, logo);
         values.put(CardEntry.COLUMN_BARCCODE, barcode);
         if (id > 0) {
@@ -174,27 +184,40 @@ public class Card {
         return image;
     }
 
-    public static void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(mainContext.getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
+    public void setFile(Bitmap thumbnailBitmap, int code){
+        File photoFile = null;
+        try {
+            photoFile = createImageFile();
+        } catch (IOException ex) {
+            // Error occurred while creating the File
 
+        }if (photoFile != null) {
+
+            try {
+                FileOutputStream out = new FileOutputStream(photoFile.getPath());
+                thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                if (out != null) {
+                    out.close();
+                }
+                if (code == REQUEST_TAKE_LOGO) {
+                    logo = photoFile.getPath();
+                    ColorArt colorArt = new ColorArt(thumbnailBitmap);
+                    color = String.valueOf(colorArt.getPrimaryColor());
+                }else if (code == REQUEST_TAKE_BARCODE)
+                    barcode = photoFile.getPath();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(mainContext,
-                        "com.example.android.fileprovider",
-                        photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                mainContext.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-                Log.i("file",photoFile.getAbsolutePath());
-            }
+        }
+    }
+
+    public static void dispatchTakePictureIntent(int code) {
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(mainContext.getPackageManager()) != null) {
+                mainContext.startActivityForResult(takePictureIntent, code);
         }
     }
 
@@ -205,6 +228,7 @@ public class Card {
         public final static String COLUMN_NAME = "name";
         public final static String COLUMN_DESCRIPTON = "description";
         public final static String COLUMN_CODE = "code";
+        public final static String COLUMN_COLOR = "color";
         public final static String COLUMN_LOGO = "logo";
         public final static String COLUMN_BARCCODE = "barcode";
 
@@ -214,7 +238,7 @@ public class Card {
 
         public static final String LOG_TAG = CardDbHelper.class.getSimpleName();
 
-        private static final String DATABASE_NAME = "card.db";
+        private static final String DATABASE_NAME = "cards.db";
 
         private static final int DATABASE_VERSION = 1;
 
@@ -230,6 +254,7 @@ public class Card {
                     + CardEntry.COLUMN_NAME + " TEXT NOT NULL, "
                     + CardEntry.COLUMN_DESCRIPTON + " TEXT NOT NULL, "
                     + CardEntry.COLUMN_CODE + " TEXT NOT NULL, "
+                    + CardEntry.COLUMN_COLOR + " TEXT NOT NULL, "
                     + CardEntry.COLUMN_LOGO + " TEXT NOT NULL, "
                     + CardEntry.COLUMN_BARCCODE + " TEXT NOT NULL);";
 

@@ -75,7 +75,7 @@ public class ItemFragment extends Fragment {
             public void onClick(View v) {
                 MainActivity mainActivity = (MainActivity)context;
                 Bundle args = new Bundle();
-                args.putLong(ARG_PARAM_ID, 0);
+                args.putLong(ARG_PARAM_ID, -1);
                 mainActivity.showForm(v, args);
             }
         });
@@ -112,15 +112,4 @@ public class ItemFragment extends Fragment {
         void onListFragmentInteraction(Card item);
     }
 
-    public void showForm(View view) {
-        MainActivity mainActivity = (MainActivity)getActivity();
-        Bundle args = new Bundle();
-        args.putLong(ARG_PARAM_ID, 0);
-        mainActivity.showForm(view, args);
-    }
-
-    public void showPhoto(View view) {
-        MainActivity mainActivity = (MainActivity)getActivity();
-        mainActivity.showPhoto(view, null);
-    }
 }

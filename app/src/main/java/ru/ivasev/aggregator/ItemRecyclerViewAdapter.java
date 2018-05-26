@@ -21,11 +21,6 @@ import java.util.List;
 
 import static ru.ivasev.aggregator.controller.FragmentController.ARG_PARAM_ID;
 
-/**
- * {@link RecyclerView.Adapter} that can display a {@link Card} and makes a call to the
- * specified {@link OnListFragmentInteractionListener}.
- * TODO: Replace the implementation with code for your data type.
- */
 public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<ItemRecyclerViewAdapter.ViewHolder> {
 
     private final List<Card> mValues;
@@ -50,14 +45,37 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<ItemRecyclerVi
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         holder.mItem = mValues.get(position);
         holder.mIdView.setText(holder.mItem.name);
-
+        if(holder.mItem.color != "")
+            holder.mView.setBackgroundColor(Integer.parseInt(holder.mItem.color));
         Glide.with(context)
-                .load(holder.mItem.logo)
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .placeholder(R.drawable.ic_launcher_foreground)
-                .into(holder.mContentView);
-        holder.mButtonView.setOnClickListener(new View.OnClickListener() {
+            .load(holder.mItem.logo)
+            .placeholder(R.mipmap.ic_launcher_round)
+            .into(holder.mContentView);
+        holder.editButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            Card image = mValues.get(position);
+
+            MainActivity mainActivity = (MainActivity)context;
+            Bundle args = new Bundle();
+            args.putLong(ARG_PARAM_ID, image.getId());
+            mainActivity.showForm(v, args);
+            }
+        });
+
+        holder.delButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Card image = mValues.get(position);
+                if (null != image) {
+                    mValues.remove(position);
+                    notifyItemRemoved(position);
+                    notifyItemRangeChanged(position, mValues.size());
+                    image.delete();
+                }
+            }
+        });
+        holder.mIdView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Card image = mValues.get(position);
@@ -65,19 +83,31 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<ItemRecyclerVi
                 MainActivity mainActivity = (MainActivity)context;
                 Bundle args = new Bundle();
                 args.putLong(ARG_PARAM_ID, image.getId());
-                mainActivity.showForm(v, args);
+                mainActivity.showPhoto(v, args);
             }
         });
+        holder.mContentView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Card image = mValues.get(position);
+
+                MainActivity mainActivity = (MainActivity)context;
+                Bundle args = new Bundle();
+                args.putLong(ARG_PARAM_ID, image.getId());
+                mainActivity.showPhoto(v, args);
+            }
+        });
+
 
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (null != mListener) {
-                    // Notify the active callbacks interface (the activity, if the
-                    // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction(holder.mItem);
-                }
+            if (null != mListener) {
+                // Notify the active callbacks interface (the activity, if the
+                // fragment is attached to one) that an item has been selected.
+                mListener.onListFragmentInteraction(holder.mItem);
+            }
             }
         });
     }
@@ -91,7 +121,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<ItemRecyclerVi
         public final View mView;
         public final TextView mIdView;
         public final ImageView mContentView;
-        public final ImageButton mButtonView;
+        public final ImageButton editButton;
+        public final ImageButton delButton;
         public Card mItem;
 
         public ViewHolder(View view) {
@@ -99,7 +130,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<ItemRecyclerVi
             mView = view;
             mIdView = (TextView) view.findViewById(R.id.nameCard);
             mContentView = (ImageView) view.findViewById(R.id.logoCard);
-            mButtonView = (ImageButton) view.findViewById(R.id.editCard);
+            editButton = (ImageButton) view.findViewById(R.id.editCard);
+            delButton = (ImageButton) view.findViewById(R.id.delCard);
         }
 
         @Override

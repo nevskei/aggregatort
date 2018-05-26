@@ -1,11 +1,10 @@
 package ru.ivasev.aggregator;
 
-import android.content.Context;
-import android.net.Uri;
+import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,14 +17,12 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import java.util.List;
 
-import ru.ivasev.aggregator.controller.FragmentController;
 import ru.ivasev.aggregator.data.Card;
 
 import static ru.ivasev.aggregator.controller.FragmentController.ARG_PARAM_ID;
 
 
 public class FormFragment extends Fragment {
-
 
     private Card card;
 
@@ -50,12 +47,14 @@ public class FormFragment extends Fragment {
     @Override
     public void onResume() {
         MainActivity mainActivity = (MainActivity)getActivity();
-
-        List<Card> listCard = Card.getList(mainActivity,null, Card.CardEntry._ID + "= ?",new String[]{Long.toString(getArguments().getLong(ARG_PARAM_ID))});
-        if(!listCard.isEmpty())
-            card = listCard.get(0);
-        else
-            card = new Card(mainActivity, "", "", "", "", "");
+        Long id = getArguments().getLong(ARG_PARAM_ID);
+        List<Card> listCard = Card.getList(mainActivity,null, Card.CardEntry._ID + "= ?",new String[]{Long.toString(id)});
+        if (card == null || card.getId() != id) {
+            if (!listCard.isEmpty())
+                card = listCard.get(0);
+            else
+                card = new Card(mainActivity, "", "", "", "", "", "");
+        }
 
         editName = (EditText)mainActivity.findViewById(R.id.name);
         editCode = (EditText)mainActivity.findViewById(R.id.code);
@@ -69,8 +68,6 @@ public class FormFragment extends Fragment {
 
         Glide.with(mainActivity)
                 .load(card.logo)
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .placeholder(R.mipmap.ic_launcher_round)
                 .into(editlogo);
         Glide.with(mainActivity)
@@ -80,33 +77,96 @@ public class FormFragment extends Fragment {
                 .placeholder(R.mipmap.ic_launcher_round)
                 .into(editBarcode);
 
+        editName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start,
+                int before, int count) {
+                if(s.length() != 0)
+                    card.name = editName.getText().toString();
+            }
+        });
+        editCode.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+                if(s.length() != 0)
+                    card.code = editCode.getText().toString();
+            }
+        });
+        editDescritpion.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+                if(s.length() != 0)
+                    card.description = editDescritpion.getText().toString();
+            }
+        });
+
+        editBarcode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Card.dispatchTakePictureIntent(Card.REQUEST_TAKE_BARCODE);
+            }
+        });
+
+
         editlogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Card.dispatchTakePictureIntent();
+                Card.dispatchTakePictureIntent(Card.REQUEST_TAKE_LOGO);
             }
         });
-/*
+
         Button save = (Button)mainActivity.findViewById(R.id.save_card);
 
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                card.name = editName.getText().toString();
-                card.code = editCode.getText().toString();
-                card.description = editDescritpion.getText().toString();
                 card.save();
                 getFragmentManager().popBackStack();
 
             }
         });
-        /**/
         super.onResume();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+    }
+
+    public void setFile(Bitmap thumbnailBitmap, int code) {
+        MainActivity mainActivity = (MainActivity)getActivity();
+        card.setFile(thumbnailBitmap, code);
+
+        if (code == Card.REQUEST_TAKE_LOGO)
+            Glide.with(mainActivity)
+                .load(card.logo)
+                .placeholder(R.mipmap.ic_launcher_round)
+                .into(editlogo);
+        else if (code == Card.REQUEST_TAKE_BARCODE)
+            Glide.with(mainActivity)
+                .load(card.barcode)
+                .placeholder(R.mipmap.ic_launcher_round)
+                .into(editBarcode);
     }
 
 }

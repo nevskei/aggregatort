@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ru.ivasev.aggregator.*;
@@ -14,8 +15,6 @@ public class FragmentController {
     private FragmentManager fm;
 
     public static final String ARG_PARAM_ID = "id_card";
-
-    public static String showTag;
 
     private Map<String, Fragment> listFragment = new HashMap<String, Fragment>();
 
@@ -27,7 +26,8 @@ public class FragmentController {
     }
 
     public void addFragment(String tag, Bundle args, boolean toBack) {
-        if (showTag != tag) {
+        Fragment fragmentTag =  fm.findFragmentByTag(tag);
+        if (fragmentTag == null) {
             Fragment fragment = listFragment.get(tag);
             if(fragment != null) {
                 if (args != null) {
@@ -35,31 +35,37 @@ public class FragmentController {
                 }
                 FragmentTransaction fragmentTransaction = fm.beginTransaction();
 
-                deleteFragment(showTag, fragmentTransaction);
+                Fragment fragmentShow = null;
+                if (tag != "list")
+                    fragmentShow =  fm.findFragmentByTag("list");
+                if (tag != "detail" && fragmentShow == null)
+                    fragmentShow =  fm.findFragmentByTag("detail");
+                if (tag != "form" && fragmentShow == null)
+                    fragmentShow =  fm.findFragmentByTag("form");
+
+
+                if(fragmentShow != null) {
+                    fragmentTransaction.remove(fragmentShow);
+                }
                 fragmentTransaction.add(R.id.fcontainer, fragment, tag);
                 if(toBack)
                     fragmentTransaction.addToBackStack(tag);
                 fragmentTransaction.commit();
-                showTag = tag;
             }
         }
     }
 
-    private void deleteFragment(String tag) {
-        FragmentTransaction fragmentTransaction = fm.beginTransaction();
-        deleteFragment(tag, fragmentTransaction);
-        fragmentTransaction.commit();
-    }
 
-    private void deleteFragment(String tag, FragmentTransaction fragmentTransaction) {
-        Fragment fragment = listFragment.get(tag);
-        if(fragment != null) {
-            fragmentTransaction.remove(fragment);
+    public void reloadFragment(String tag) {
+        Fragment fragmentTag =  fm.findFragmentByTag(tag);
+        if (fragmentTag != null) {
+            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            fragmentTransaction.detach(fragmentTag);
+            fragmentTransaction.attach(fragmentTag);
+            fragmentTransaction.commit();
+
         }
+
     }
 
-    public static void onBackPressed() {
-        if (showTag == "form" || showTag == "detail" )
-        showTag = "list";
-    }
 }
